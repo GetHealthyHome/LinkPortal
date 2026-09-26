@@ -1,0 +1,40 @@
+@import 'tailwindcss';
+
+@theme {
+  --font-sans: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --animate-wiggle: wiggle 0.28s ease-in-out infinite;
+  --animate-wiggle-alt: wiggle 0.3s ease-in-out -0.15s infinite;
+  --animate-shake: shake 0.4s ease-in-out;
+
+  @keyframes wiggle {
+    0%, 100% { transform: rotate(-1.6deg); }
+    50% { transform: rotate(1.6deg); }
+  }
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20%, 60% { transform: translateX(-10px); }
+    40%, 80% { transform: translateX(10px); }
+  }
+}
+
+@layer components {
+  .card {
+    @apply rounded-2xl bg-white p-5 shadow-sm ring-1 ring-neutral-200 sm:p-6;
+  }
+  .input {
+    @apply w-full rounded-xl border border-neutral-300 bg-white px-3 py-2 text-base outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200;
+  }
+  .btn-primary {
+    @apply inline-flex items-center justify-center rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-secondary {
+    @apply inline-flex items-center justify-center rounded-xl bg-white px-3.5 py-2 text-sm font-medium text-neutral-800 ring-1 ring-neutral-300 hover:bg-neutral-50;
+  }
+  .btn-small {
+    @apply inline-flex items-center justify-center rounded-lg px-2.5 py-1 text-sm font-medium text-neutral-700 ring-1 ring-neutral-200 hover:bg-neutral-50 disabled:opacity-40;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-wiggle, .animate-wiggle-alt, .animate-shake { animation: none; }
+}
