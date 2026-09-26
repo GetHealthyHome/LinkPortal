@@ -28,11 +28,13 @@ export function AppIconImage({
 
   return (
     <div className={`${className} flex items-center justify-center overflow-hidden rounded-[22%] bg-white ${small ? '' : 'shadow-md'}`}>
+      {/* Website icons are rounded to follow the tile's corners (22% radius minus the 5% inset,
+          as a share of the 90%-wide image), so square logos don't poke out square. */}
       <img
         src={src}
         alt=""
         draggable={false}
-        className={app.icon_data ? 'size-full object-cover' : 'size-[90%] object-contain'}
+        className={app.icon_data ? 'size-full object-cover' : 'size-[90%] rounded-[19%] object-contain'}
         onError={() => setFailedSrc(src)}
       />
     </div>
