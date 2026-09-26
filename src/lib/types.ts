@@ -34,3 +34,10 @@ export interface FolderItem {
 
 export type BoardItem = AppItem | FolderItem;
 export type Layout = BoardItem[];
+
+export interface Favorites {
+  /** Apps the person pinned, in order. */
+  pinned: string[];
+  /** Up to 5 apps to show: pinned first, then the most opened. */
+  bar: string[];
+}

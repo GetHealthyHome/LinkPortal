@@ -24,10 +24,12 @@ interface BoardProps {
   masterFolders: MasterFolder[];
   editing?: boolean;
   onChange?: (layout: Layout) => void;
+  /** Called when an app is opened (used to count visits for the favorites bar). */
+  onOpenApp?: (appId: string) => void;
 }
 
 /** The iPad-style home screen. Read-only unless `editing` is set. */
-export function Board({ layout, apps, masterFolders, editing = false, onChange }: BoardProps) {
+export function Board({ layout, apps, masterFolders, editing = false, onChange, onOpenApp }: BoardProps) {
   const [openFolderId, setOpenFolderId] = useState<string | null>(null);
   const openFolder = layout.find((i): i is FolderItem => i.type === 'folder' && i.id === openFolderId);
   const visible = layout.filter((item) => item.type === 'folder' || apps.has(item.id));
@@ -38,6 +40,7 @@ export function Board({ layout, apps, masterFolders, editing = false, onChange }
       folder={openFolder}
       apps={apps}
       editing={editing}
+      onOpenApp={onOpenApp}
       onClose={() => setOpenFolderId(null)}
       onRename={(name) => change(renameFolder(layout, openFolder.id, name))}
       onReorder={(from, to, side) => change(moveInFolder(layout, openFolder.id, from, to, side))}
@@ -62,7 +65,7 @@ export function Board({ layout, apps, masterFolders, editing = false, onChange }
         <div className={GRID_CLASSES}>
           {visible.map((item) =>
             item.type === 'app' ? (
-              <AppLink key={itemKey(item)} app={apps.get(item.id)!} />
+              <AppLink key={itemKey(item)} app={apps.get(item.id)!} onOpen={onOpenApp} />
             ) : (
               <button
                 key={itemKey(item)}
@@ -123,13 +126,14 @@ export function Board({ layout, apps, masterFolders, editing = false, onChange }
   );
 }
 
-function AppLink({ app }: { app: App }) {
+function AppLink({ app, onOpen }: { app: App; onOpen?: (appId: string) => void }) {
   return (
     <a
       href={app.url}
       target="_blank"
       rel="noopener noreferrer"
       title={app.name}
+      onClick={() => onOpen?.(app.id)}
       className="flex flex-col items-center justify-self-center rounded-2xl outline-none transition-transform focus-visible:ring-2 focus-visible:ring-white active:scale-95"
     >
       <AppIconImage app={app} />
@@ -142,6 +146,7 @@ function FolderModal({
   folder,
   apps,
   editing,
+  onOpenApp,
   onClose,
   onRename,
   onReorder,
@@ -152,6 +157,7 @@ function FolderModal({
   folder: FolderItem;
   apps: Map<string, App>;
   editing: boolean;
+  onOpenApp?: (appId: string) => void;
   onClose: () => void;
   onRename: (name: string) => void;
   onReorder: (fromKey: string, toKey: string, side: 'before' | 'after') => void;
@@ -214,7 +220,7 @@ function FolderModal({
           ) : (
             <div className={grid}>
               {folderApps.map((app) => (
-                <AppLink key={app.id} app={app} />
+                <AppLink key={app.id} app={app} onOpen={onOpenApp} />
               ))}
             </div>
           )}

@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import type { App, Layout, MasterFolder, Person } from './types';
+import type { App, Favorites, Layout, MasterFolder, Person } from './types';
 
 const url = import.meta.env.VITE_SUPABASE_URL as string | undefined;
 const key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined;
@@ -40,6 +40,11 @@ export const api = {
   listMasterFolders: () => rpc<MasterFolder[]>('list_master_folders'),
   getBoard: async (personId: string) =>
     (await rpc<Layout | null>('get_board', { p_person_id: personId })) ?? [],
+  getFavorites: (personId: string) => rpc<Favorites>('get_favorites', { p_person_id: personId }),
+  recordVisit: (personId: string, appId: string) =>
+    rpc<void>('record_visit', { p_person_id: personId, p_app_id: appId }),
+  savePins: (token: string, personId: string, appIds: string[]) =>
+    rpc<void>('save_pins', { p_token: token, p_person_id: personId, p_app_ids: appIds }),
   defaultLayout: (appIds: string[]) => rpc<Layout>('default_layout', { p_app_ids: appIds }),
 
   unlockPerson: (personId: string, pin: string) =>
