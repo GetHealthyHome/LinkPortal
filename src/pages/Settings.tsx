@@ -4,7 +4,7 @@ import { AppIconImage } from '../components/AppIcon';
 import { Board } from '../components/Board';
 import { PinPad } from '../components/PinPad';
 import { Spinner, Wallpaper } from '../components/Wallpaper';
-import { api } from '../lib/api';
+import { api, NeedsPinError } from '../lib/api';
 import { addApp, appIdsIn, removeApp } from '../lib/layout';
 import { session } from '../lib/session';
 import type { App, Layout } from '../lib/types';
@@ -22,6 +22,10 @@ export function Settings() {
   const [auth, setAuth] = useState<Auth>({ state: 'checking' });
   const [pinError, setPinError] = useState<string | null>(null);
   const [pinBusy, setPinBusy] = useState(false);
+  // Creating a first PIN: null = decide from the person's has_pin; otherwise the
+  // step we're on ('create' = type it, 'confirm' = type it again).
+  const [createStep, setCreateStep] = useState<'create' | 'confirm' | 'no' | null>(null);
+  const [firstPin, setFirstPin] = useState('');
   const [layout, setLayout] = useState<Layout | null>(null);
   const [saveState, setSaveState] = useState<SaveState>('idle');
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -103,6 +107,35 @@ export function Settings() {
       session.setPersonToken(personId, token);
       setAuth({ state: 'unlocked', token, asAdmin: false });
     } catch (e) {
+      if (e instanceof NeedsPinError) setCreateStep('create');
+      else setPinError((e as Error).message);
+    } finally {
+      setPinBusy(false);
+    }
+  }
+
+  async function createPin(pin: string) {
+    if (createStep !== 'confirm') {
+      setFirstPin(pin);
+      setPinError(null);
+      setCreateStep('confirm');
+      return;
+    }
+    if (pin !== firstPin) {
+      setFirstPin('');
+      setPinError('Those PINs didn’t match. Try again.');
+      setCreateStep('create');
+      return;
+    }
+    setPinBusy(true);
+    setPinError(null);
+    try {
+      const token = await api.createFirstPin(personId, pin);
+      session.setPersonToken(personId, token);
+      setAuth({ state: 'unlocked', token, asAdmin: false });
+    } catch (e) {
+      // Someone else set it in the meantime: fall back to entering the PIN.
+      setCreateStep('no');
       setPinError((e as Error).message);
     } finally {
       setPinBusy(false);
@@ -148,17 +181,35 @@ export function Settings() {
   }
 
   if (auth.state === 'locked') {
+    const step = createStep ?? (person.has_pin === false ? 'create' : 'no');
     return (
       <Wallpaper>
         <div className="flex min-h-dvh flex-col items-center justify-center px-4 py-10">
-          <PinPad
-            title={`Hi ${person.name}`}
-            subtitle="Enter your 4-digit PIN to change your apps"
-            error={pinError}
-            busy={pinBusy}
-            onSubmit={unlock}
-            onCancel={() => navigate('/')}
-          />
+          {step === 'no' ? (
+            <PinPad
+              key="enter"
+              title={`Hi ${person.name}`}
+              subtitle="Enter your 4-digit PIN to change your apps"
+              error={pinError}
+              busy={pinBusy}
+              onSubmit={unlock}
+              onCancel={() => navigate('/')}
+            />
+          ) : (
+            <PinPad
+              key={step}
+              title={step === 'create' ? `Welcome, ${person.name}!` : 'Confirm your PIN'}
+              subtitle={
+                step === 'create'
+                  ? 'Create a 4-digit PIN. You’ll use it whenever you change your apps.'
+                  : 'Type the same 4 digits again'
+              }
+              error={pinError}
+              busy={pinBusy}
+              onSubmit={createPin}
+              onCancel={() => navigate('/')}
+            />
+          )}
           <Link to="/admin" className="mt-10 text-sm text-white/70 underline-offset-2 hover:text-white hover:underline">
             Admin sign-in
           </Link>

@@ -12,7 +12,10 @@ in the top-left corner and you see your own iPad-style grid of app icons.
   - **Reset to company layout** to go back to the admin's master folders,
   - change your PIN.
 - **Admin** (`/admin`, separate password):
-  - add and remove people, set their PIN and starting apps, rename them, reset PINs,
+  - add and remove people, give them starting apps, and rename them,
+  - set a person's PIN, or leave it blank so they create their own the first time
+    they tap the gear ("No PIN yet" shows who hasn't). **Reset PIN** can set a new
+    PIN, or be left blank to clear it so they create a new one,
   - edit anyone's home screen (no PIN needed while signed in as admin),
   - add, edit and delete apps. The website's own icon is used automatically,
     or you can upload one. An app can be given to everyone at once,
@@ -35,7 +38,7 @@ passwords lock admin sign-in for 10 minutes.
 ## Setup
 
 1. **Create the database.** Create a Supabase project, open the **SQL Editor**, and
-   run `supabase/migrations/20260926000000_link_portal.sql`.
+   run each file in `supabase/migrations/` in order (oldest first), one at a time.
 2. **Set the admin password.** In the SQL Editor, run (use your own password):
    ```sql
    update portal_private.admin_settings

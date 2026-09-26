@@ -21,10 +21,15 @@ interface UnlockResult {
   ok: boolean;
   token?: string;
   error?: string;
+  needs_pin?: boolean;
 }
+
+/** Thrown when someone tries to unlock a person who hasn't created a PIN yet. */
+export class NeedsPinError extends Error {}
 
 async function unlock(result: Promise<UnlockResult>): Promise<string> {
   const r = await result;
+  if (r.needs_pin) throw new NeedsPinError(r.error ?? 'No PIN yet');
   if (!r.ok || !r.token) throw new Error(r.error ?? 'Could not unlock');
   return r.token;
 }
@@ -39,6 +44,8 @@ export const api = {
 
   unlockPerson: (personId: string, pin: string) =>
     unlock(rpc<UnlockResult>('unlock_person', { p_person_id: personId, p_pin: pin })),
+  createFirstPin: (personId: string, pin: string) =>
+    unlock(rpc<UnlockResult>('create_first_pin', { p_person_id: personId, p_pin: pin })),
   saveBoard: (token: string, personId: string, layout: Layout) =>
     rpc<Layout>('save_board', { p_token: token, p_person_id: personId, p_layout: layout }),
   changePin: (token: string, personId: string, pin: string) =>
@@ -55,6 +62,8 @@ export const api = {
     rpc<string>('admin_create_person', { p_token: token, p_name: name, p_pin: pin, p_app_ids: appIds }),
   renamePerson: (token: string, personId: string, name: string) =>
     rpc<void>('admin_rename_person', { p_token: token, p_person_id: personId, p_name: name }),
+  clearPin: (token: string, personId: string) =>
+    rpc<void>('admin_clear_pin', { p_token: token, p_person_id: personId }),
   deletePerson: (token: string, personId: string) =>
     rpc<void>('admin_delete_person', { p_token: token, p_person_id: personId }),
 

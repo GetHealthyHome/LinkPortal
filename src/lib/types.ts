@@ -1,6 +1,8 @@
 export interface Person {
   id: string;
   name: string;
+  /** False until the person (or admin) has set a PIN. */
+  has_pin: boolean;
 }
 
 export interface App {
