@@ -32,6 +32,8 @@ export interface FolderItem {
   id: string;
   name: string;
   apps: string[];
+  /** 'pane' shows the apps in a frosted-glass window on the home screen; otherwise a stack. */
+  view?: 'pane';
 }
 
 export type BoardItem = AppItem | FolderItem;
