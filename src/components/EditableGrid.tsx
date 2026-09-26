@@ -25,6 +25,8 @@ export interface GridEntry {
   /** Small round button in the top-left corner while editing, like the iPad's "−". */
   badge?: { label: string; symbol: string; onClick: () => void };
   onTap?: () => void;
+  /** Grid column span class for wide tiles (folder panes), e.g. 'col-span-3'. */
+  span?: string;
 }
 
 type Zone = Side | 'onto';
@@ -140,18 +142,26 @@ function Tile({ entry, index, dragging, zone }: { entry: GridEntry; index: numbe
       {...drag.attributes}
       {...drag.listeners}
       onClick={entry.onTap}
-      className={`relative flex touch-manipulation select-none flex-col items-center justify-self-center transition-transform duration-150 ${
-        dragging ? 'opacity-25' : 'cursor-grab'
-      } ${zone === 'onto' ? 'scale-110' : ''}`}
+      className={`relative flex touch-manipulation select-none flex-col items-center transition-transform duration-150 ${
+        entry.span ? `${entry.span} justify-self-stretch` : 'justify-self-center'
+      } ${dragging ? 'opacity-25' : 'cursor-grab'} ${zone === 'onto' ? (entry.span ? 'scale-[1.02]' : 'scale-110') : ''}`}
     >
-      <div className={dragging ? '' : index % 2 ? 'animate-wiggle-alt' : 'animate-wiggle'}>{entry.render()}</div>
+      {/* Wide panes don't wiggle (it looks shaky at that size); they get a dashed outline instead. */}
+      <div className={entry.span ? 'w-full' : dragging ? '' : index % 2 ? 'animate-wiggle-alt' : 'animate-wiggle'}>{entry.render()}</div>
+      {entry.span && !dragging && (
+        <div className="pointer-events-none absolute inset-0 rounded-[28px] border-2 border-dashed border-white/50" />
+      )}
 
       {zone === 'onto' && (
-        <div className="pointer-events-none absolute left-1/2 top-0 size-16 -translate-x-1/2 rounded-[22%] ring-4 ring-white/80 sm:size-[72px]" />
+        <div
+          className={`pointer-events-none absolute ring-4 ring-white/80 ${
+            entry.span ? 'inset-0 rounded-[28px]' : 'left-1/2 top-0 size-16 -translate-x-1/2 rounded-[22%] sm:size-[72px]'
+          }`}
+        />
       )}
       {(zone === 'before' || zone === 'after') && (
         <div
-          className={`pointer-events-none absolute top-0 h-16 w-1 rounded-full bg-white shadow sm:h-[72px] ${
+          className={`pointer-events-none absolute top-0 w-1 rounded-full bg-white shadow ${entry.span ? 'bottom-0' : 'h-16 sm:h-[72px]'} ${
             zone === 'before' ? '-left-3' : '-right-3'
           }`}
         />

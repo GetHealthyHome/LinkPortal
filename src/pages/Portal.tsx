@@ -54,6 +54,8 @@ export function Portal() {
   }
 
   function choose(id: string) {
+    // Admin access unlocked by someone's PIN doesn't carry over to another person.
+    if (session.adminFromPin() && session.adminPinPerson() !== id) session.signOutAll(api.endSession);
     setPersonId(id || null);
     session.setSelectedPerson(id || null);
   }
@@ -82,6 +84,16 @@ export function Portal() {
 
         <Clock />
 
+        <div className="flex items-center gap-2">
+        {selected?.is_admin && (
+          <button
+            type="button"
+            onClick={() => navigate(`/admin?person=${selected.id}`)}
+            className="rounded-full bg-white/20 px-3.5 py-2 text-sm font-semibold text-white shadow-sm ring-1 ring-white/25 backdrop-blur-md hover:bg-white/30"
+          >
+            Admin
+          </button>
+        )}
         <button
           type="button"
           onClick={() => (selected ? navigate(`/settings/${selected.id}`) : navigate('/admin'))}
@@ -91,6 +103,7 @@ export function Portal() {
         >
           <GearIcon />
         </button>
+        </div>
       </header>
 
       {selected && favorites.length > 0 && (

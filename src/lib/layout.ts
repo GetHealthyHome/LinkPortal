@@ -84,6 +84,21 @@ function suggestFolderName(appIds: string[], apps: Map<string, App>, masterFolde
   return 'Folder';
 }
 
+export function setFolderView(layout: Layout, folderId: string, view: 'stack' | 'pane'): Layout {
+  return layout.map((item) => {
+    if (item.type !== 'folder' || item.id !== folderId) return item;
+    const { view: _old, ...rest } = item;
+    return view === 'pane' ? { ...rest, view: 'pane' } : rest;
+  });
+}
+
+/** How many grid columns a pane spans: it grows with the number of apps inside. */
+export function paneColumns(appCount: number): 2 | 3 | 4 {
+  if (appCount <= 4) return 2;
+  if (appCount <= 6) return 3;
+  return 4;
+}
+
 export function renameFolder(layout: Layout, folderId: string, name: string): Layout {
   return layout.map((item) =>
     item.type === 'folder' && item.id === folderId ? { ...item, name: name.slice(0, 40) } : item,

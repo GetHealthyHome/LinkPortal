@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { AppIconImage, TileLabel } from './AppIcon';
 import { FolderIconImage } from './FolderIcon';
+import { FolderPane, paneSpanClass } from './FolderPane';
 import { EditableGrid, type GridEntry } from './EditableGrid';
 import {
   dropOnto,
@@ -11,12 +12,13 @@ import {
   moveToEnd,
   removeApp,
   renameFolder,
+  setFolderView,
   ungroupFolder,
 } from '../lib/layout';
 import type { App, FolderItem, Layout, MasterFolder } from '../lib/types';
 
 export const GRID_CLASSES =
-  'grid grid-cols-4 gap-x-2 gap-y-7 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 sm:gap-x-4';
+  'grid grid-cols-4 items-start gap-x-2 gap-y-7 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 sm:gap-x-4';
 
 interface BoardProps {
   layout: Layout;
@@ -43,6 +45,10 @@ export function Board({ layout, apps, masterFolders, editing = false, onChange, 
       onOpenApp={onOpenApp}
       onClose={() => setOpenFolderId(null)}
       onRename={(name) => change(renameFolder(layout, openFolder.id, name))}
+      onSetView={(view) => {
+        setOpenFolderId(null);
+        change(setFolderView(layout, openFolder.id, view));
+      }}
       onReorder={(from, to, side) => change(moveInFolder(layout, openFolder.id, from, to, side))}
       onMoveToEnd={(from) => {
         const last = openFolder.apps[openFolder.apps.length - 1];
@@ -66,6 +72,10 @@ export function Board({ layout, apps, masterFolders, editing = false, onChange, 
           {visible.map((item) =>
             item.type === 'app' ? (
               <AppLink key={itemKey(item)} app={apps.get(item.id)!} onOpen={onOpenApp} />
+            ) : item.view === 'pane' ? (
+              <div key={itemKey(item)} className={paneSpanClass(item)}>
+                <FolderPane folder={item} apps={apps} onOpenApp={onOpenApp} />
+              </div>
             ) : (
               <button
                 key={itemKey(item)}
@@ -98,18 +108,27 @@ export function Board({ layout, apps, masterFolders, editing = false, onChange, 
           ),
           badge: { label: `Remove ${apps.get(item.id)!.name}`, symbol: '−', onClick: () => change(removeApp(layout, item.id)) },
         }
-      : {
-          key: itemKey(item),
-          acceptsDrop: true,
-          canDropOnto: false,
-          render: () => (
-            <div className="flex flex-col items-center">
-              <FolderIconImage folder={item} apps={apps} />
-              <TileLabel>{item.name}</TileLabel>
-            </div>
-          ),
-          onTap: () => setOpenFolderId(item.id),
-        },
+      : item.view === 'pane'
+        ? {
+            key: itemKey(item),
+            acceptsDrop: true,
+            canDropOnto: false,
+            span: paneSpanClass(item),
+            render: () => <FolderPane folder={item} apps={apps} interactive={false} />,
+            onTap: () => setOpenFolderId(item.id),
+          }
+        : {
+            key: itemKey(item),
+            acceptsDrop: true,
+            canDropOnto: false,
+            render: () => (
+              <div className="flex flex-col items-center">
+                <FolderIconImage folder={item} apps={apps} />
+                <TileLabel>{item.name}</TileLabel>
+              </div>
+            ),
+            onTap: () => setOpenFolderId(item.id),
+          },
   );
 
   return (
@@ -149,6 +168,7 @@ function FolderModal({
   onOpenApp,
   onClose,
   onRename,
+  onSetView,
   onReorder,
   onMoveToEnd,
   onTakeOut,
@@ -160,6 +180,7 @@ function FolderModal({
   onOpenApp?: (appId: string) => void;
   onClose: () => void;
   onRename: (name: string) => void;
+  onSetView: (view: 'stack' | 'pane') => void;
   onReorder: (fromKey: string, toKey: string, side: 'before' | 'after') => void;
   onMoveToEnd: (fromKey: string) => void;
   onTakeOut: (appId: string) => void;
@@ -225,6 +246,28 @@ function FolderModal({
             </div>
           )}
         </div>
+
+        {editing && (
+          <div className="mt-5 flex justify-center">
+            <div className="grid grid-cols-2 gap-1 rounded-full bg-white/20 p-1 text-sm font-semibold ring-1 ring-white/25" role="radiogroup" aria-label="Show this folder as">
+              {(['stack', 'pane'] as const).map((view) => {
+                const selected = (folder.view === 'pane' ? 'pane' : 'stack') === view;
+                return (
+                  <button
+                    key={view}
+                    type="button"
+                    role="radio"
+                    aria-checked={selected}
+                    onClick={() => !selected && onSetView(view)}
+                    className={`rounded-full px-4 py-1.5 ${selected ? 'bg-white text-neutral-900 shadow' : 'text-white hover:bg-white/15'}`}
+                  >
+                    {view === 'stack' ? '▦ Show as stack' : '▭ Show as pane'}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {editing && (
           <div className="mt-4 flex flex-wrap items-center justify-center gap-3 text-sm">

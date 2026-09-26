@@ -10,6 +10,9 @@ in the top-left corner and you see your own iPad-style grid of app icons.
   - drag icons to rearrange them,
   - drop one app onto another to make a folder (or onto a folder to add it),
   - tap a folder to rename it, reorder it, take apps out (↑) or ungroup it,
+  - choose **Show as stack** (a small folder you tap to open) or **Show as pane**
+    (a frosted-glass window on the home screen showing the apps directly; it gets
+    wider as more apps are added),
   - pin up to 5 apps to the favorites bar and set their order (the rest of the
     bar fills in with the apps you open most),
   - tick or untick apps under **Choose your apps**,
@@ -24,7 +27,12 @@ in the top-left corner and you see your own iPad-style grid of app icons.
   - add, edit and delete apps. The website's own icon is used automatically,
     or you can upload one. An app can be given to everyone at once,
   - create master folders (company categories such as "Sales" or "HR"),
-  - change the admin password.
+  - change the admin password,
+  - **Make admin**: mark a person as an admin. Their own 4-digit PIN then also
+    unlocks the admin tools (for 1 hour; tapping Done or signing out ends it).
+    An **Admin** button appears next to the gear when their name is picked, and
+    the admin sign-in page offers "My name & PIN". The admin password always
+    keeps working as a backup.
 
 Five wrong PINs lock that person's board for 5 minutes. Five wrong admin
 passwords lock admin sign-in for 10 minutes.

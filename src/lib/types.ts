@@ -3,6 +3,8 @@ export interface Person {
   name: string;
   /** False until the person (or admin) has set a PIN. */
   has_pin: boolean;
+  /** Admins' own PIN also unlocks the admin tools. */
+  is_admin: boolean;
 }
 
 export interface App {
@@ -30,6 +32,8 @@ export interface FolderItem {
   id: string;
   name: string;
   apps: string[];
+  /** 'pane' shows the apps in a frosted-glass window on the home screen; otherwise a stack. */
+  view?: 'pane';
 }
 
 export type BoardItem = AppItem | FolderItem;
