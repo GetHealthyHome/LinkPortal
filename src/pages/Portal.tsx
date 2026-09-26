@@ -82,7 +82,6 @@ export function Portal() {
           </span>
         </label>
 
-        <Clock />
 
         <div className="flex items-center gap-2">
         {selected?.is_admin && (
@@ -106,8 +105,10 @@ export function Portal() {
         </div>
       </header>
 
+      <Clock />
+
       {selected && favorites.length > 0 && (
-        <div className="sticky top-3 z-30 mt-5 px-4 sm:px-8">
+        <div className="sticky top-3 z-30 mt-6 px-4 sm:px-8">
           <FavoritesBar apps={favorites} onOpenApp={recordVisit} />
         </div>
       )}
@@ -173,9 +174,9 @@ function Clock() {
     return () => clearInterval(t);
   }, []);
   return (
-    <div className="hidden text-center leading-tight sm:block [text-shadow:0_1px_3px_rgb(0_0_0/0.35)]">
-      <div className="text-4xl font-semibold tracking-tight">{now.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</div>
-      <div className="mt-0.5 text-base text-white/85">{now.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' })}</div>
+    <div className="mt-4 text-center leading-tight [text-shadow:0_1px_3px_rgb(0_0_0/0.35)] sm:mt-2">
+      <div className="text-5xl font-semibold tracking-tight sm:text-6xl">{now.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</div>
+      <div className="mt-1 text-base text-white/85 sm:text-lg">{now.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' })}</div>
     </div>
   );
 }
