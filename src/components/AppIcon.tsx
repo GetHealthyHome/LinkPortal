@@ -32,7 +32,7 @@ export function AppIconImage({
         src={src}
         alt=""
         draggable={false}
-        className={app.icon_data ? 'size-full object-cover' : 'size-[62%] object-contain'}
+        className={app.icon_data ? 'size-full object-cover' : 'size-[90%] object-contain'}
         onError={() => setFailedSrc(src)}
       />
     </div>
