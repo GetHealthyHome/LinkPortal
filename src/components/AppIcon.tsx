@@ -39,9 +39,11 @@ export function AppIconImage({
   );
 }
 
-export function TileLabel({ children }: { children: React.ReactNode }) {
+export function TileLabel({ children, folder = false }: { children: React.ReactNode; folder?: boolean }) {
+  // Folder names are 4px larger than app names.
+  const size = folder ? 'w-20 text-base font-semibold sm:w-28 sm:text-[17px]' : 'w-20 text-xs font-medium sm:w-24 sm:text-[13px]';
   return (
-    <span className="mt-1.5 line-clamp-1 w-20 text-center text-xs font-medium text-white [text-shadow:0_1px_3px_rgb(0_0_0/0.6)] sm:w-24 sm:text-[13px]">
+    <span className={`mt-1.5 line-clamp-1 text-center text-white [text-shadow:0_1px_3px_rgb(0_0_0/0.6)] ${size}`}>
       {children}
     </span>
   );

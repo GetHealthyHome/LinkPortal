@@ -168,8 +168,8 @@ function Clock() {
   }, []);
   return (
     <div className="hidden text-center leading-tight sm:block [text-shadow:0_1px_3px_rgb(0_0_0/0.35)]">
-      <div className="text-lg font-semibold">{now.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</div>
-      <div className="text-xs text-white/80">{now.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' })}</div>
+      <div className="text-4xl font-semibold tracking-tight">{now.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</div>
+      <div className="mt-0.5 text-base text-white/85">{now.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' })}</div>
     </div>
   );
 }

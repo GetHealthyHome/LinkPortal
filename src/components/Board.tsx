@@ -84,7 +84,7 @@ export function Board({ layout, apps, masterFolders, editing = false, onChange, 
                 className="flex flex-col items-center justify-self-center rounded-2xl outline-none transition-transform focus-visible:ring-2 focus-visible:ring-white active:scale-95"
               >
                 <FolderIconImage folder={item} apps={apps} />
-                <TileLabel>{item.name}</TileLabel>
+                <TileLabel folder>{item.name}</TileLabel>
               </button>
             ),
           )}
@@ -124,7 +124,7 @@ export function Board({ layout, apps, masterFolders, editing = false, onChange, 
             render: () => (
               <div className="flex flex-col items-center">
                 <FolderIconImage folder={item} apps={apps} />
-                <TileLabel>{item.name}</TileLabel>
+                <TileLabel folder>{item.name}</TileLabel>
               </div>
             ),
             onTap: () => setOpenFolderId(item.id),
