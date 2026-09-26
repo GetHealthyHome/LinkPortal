@@ -304,69 +304,71 @@ function PeopleTab({ token, data, run }: { token: string; data: Data; run: Run }
         {data.people.length === 0 && <p className="mt-3 text-sm text-neutral-500">No one yet.</p>}
         <ul className="mt-2 divide-y divide-neutral-100">
           {data.people.map((p) => (
-            <li key={p.id} className="flex flex-wrap items-center gap-2 py-3">
-              <span className="min-w-0 flex-1 truncate font-medium">
-                {p.name}
+            <li key={p.id} className="py-3">
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-1 break-words font-medium">
+                <span className="min-w-0 break-words">{p.name}</span>
                 {p.has_pin === false && (
-                  <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">No PIN yet</span>
+                  <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">No PIN yet</span>
                 )}
                 {p.is_admin && (
-                  <span className="ml-2 rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-medium text-indigo-800">Admin</span>
+                  <span className="rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-medium text-indigo-800">Admin</span>
                 )}
-              </span>
-              <Link to={`/settings/${p.id}`} className="btn-small">
-                Edit apps
-              </Link>
-              <button
-                type="button"
-                className="btn-small"
-                onClick={() => {
-                  const next = prompt(`New name for ${p.name}:`, p.name)?.trim();
-                  if (next && next !== p.name) void run(() => api.renamePerson(token, p.id, next));
-                }}
-              >
-                Rename
-              </button>
-              <button
-                type="button"
-                className="btn-small"
-                onClick={() => {
-                  const message = p.is_admin
-                    ? `Remove admin from ${p.name}? Their PIN will only open their own home screen.`
-                    : `Make ${p.name} an admin? Their 4-digit PIN will also unlock these admin tools.`;
-                  if (confirm(message)) void run(() => api.setAdmin(token, p.id, !p.is_admin));
-                }}
-              >
-                {p.is_admin ? 'Remove admin' : 'Make admin'}
-              </button>
-              <button
-                type="button"
-                className="btn-small"
-                onClick={() => {
-                  const answer = prompt(
-                    `New 4-digit PIN for ${p.name}.\n\nOr leave this blank and click OK to clear it, so ${p.name} creates a new PIN next time.`,
-                  );
-                  if (answer === null) return;
-                  const next = answer.trim();
-                  if (next === '') {
-                    void run(() => api.clearPin(token, p.id)).then(
-                      (ok) => ok && alert(`${p.name}’s PIN was cleared. They’ll create a new one next time they tap the gear.`),
+              </div>
+              <div className="mt-2 flex flex-wrap gap-2">
+                <Link to={`/settings/${p.id}`} className="btn-small">
+                  Edit apps
+                </Link>
+                <button
+                  type="button"
+                  className="btn-small"
+                  onClick={() => {
+                    const next = prompt(`New name for ${p.name}:`, p.name)?.trim();
+                    if (next && next !== p.name) void run(() => api.renamePerson(token, p.id, next));
+                  }}
+                >
+                  Rename
+                </button>
+                <button
+                  type="button"
+                  className="btn-small"
+                  onClick={() => {
+                    const message = p.is_admin
+                      ? `Remove admin from ${p.name}? Their PIN will only open their own home screen.`
+                      : `Make ${p.name} an admin? Their 4-digit PIN will also unlock these admin tools.`;
+                    if (confirm(message)) void run(() => api.setAdmin(token, p.id, !p.is_admin));
+                  }}
+                >
+                  {p.is_admin ? 'Remove admin' : 'Make admin'}
+                </button>
+                <button
+                  type="button"
+                  className="btn-small"
+                  onClick={() => {
+                    const answer = prompt(
+                      `New 4-digit PIN for ${p.name}.\n\nOr leave this blank and click OK to clear it, so ${p.name} creates a new PIN next time.`,
                     );
-                    return;
-                  }
-                  if (!/^\d{4}$/.test(next)) return alert('The PIN must be exactly 4 digits.');
-                  void run(() => api.changePin(token, p.id, next)).then((ok) => ok && alert(`${p.name}’s PIN was changed.`));
-                }}
-              >
-                Reset PIN
-              </button>
-              <button
-                type="button"
-                className="btn-small text-red-600"
-                onClick={() => confirm(`Remove ${p.name} and their home screen?`) && void run(() => api.deletePerson(token, p.id))}
-              >
-                Remove
-              </button>
+                    if (answer === null) return;
+                    const next = answer.trim();
+                    if (next === '') {
+                      void run(() => api.clearPin(token, p.id)).then(
+                        (ok) => ok && alert(`${p.name}’s PIN was cleared. They’ll create a new one next time they tap the gear.`),
+                      );
+                      return;
+                    }
+                    if (!/^\d{4}$/.test(next)) return alert('The PIN must be exactly 4 digits.');
+                    void run(() => api.changePin(token, p.id, next)).then((ok) => ok && alert(`${p.name}’s PIN was changed.`));
+                  }}
+                >
+                  Reset PIN
+                </button>
+                <button
+                  type="button"
+                  className="btn-small text-red-600"
+                  onClick={() => confirm(`Remove ${p.name} and their home screen?`) && void run(() => api.deletePerson(token, p.id))}
+                >
+                  Remove
+                </button>
+              </div>
             </li>
           ))}
         </ul>
@@ -444,7 +446,7 @@ function AppsTab({ token, data, run }: { token: string; data: Data; run: Run }) 
         {data.appList.map((app) => (
           <li key={app.id} className="flex flex-wrap items-center gap-3 py-3">
             <AppIconImage app={app} className="size-11" />
-            <div className="min-w-0 flex-1">
+            <div className="min-w-[12rem] flex-1">
               <div className="truncate font-medium">{app.name}</div>
               <div className="truncate text-xs text-neutral-500">
                 {app.url}
@@ -644,7 +646,7 @@ function FoldersTab({ token, folders, apps, run }: { token: string; folders: Mas
         <ul className="mt-2 divide-y divide-neutral-100">
           {folders.map((f, i) => (
             <li key={f.id} className="flex flex-wrap items-center gap-2 py-3">
-              <span className="min-w-0 flex-1 truncate font-medium">
+              <span className="min-w-[10rem] flex-1 break-words font-medium">
                 {f.name}{' '}
                 <span className="text-xs font-normal text-neutral-500">
                   {apps.filter((a) => a.master_folder_id === f.id).length} apps
