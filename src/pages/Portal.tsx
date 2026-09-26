@@ -40,7 +40,7 @@ export function Portal() {
     // The favorites bar is a nice-to-have: if it fails, just don't show it.
     api
       .getFavorites(selected.id)
-      .then((f) => !cancelled && setFavoriteIds(f.bar))
+      .then((f) => !cancelled && setFavoriteIds(f.show === false ? [] : f.bar))
       .catch(() => {});
     return () => {
       cancelled = true;
@@ -82,7 +82,6 @@ export function Portal() {
           </span>
         </label>
 
-        <Clock />
 
         <div className="flex items-center gap-2">
         {selected?.is_admin && (
@@ -106,13 +105,21 @@ export function Portal() {
         </div>
       </header>
 
+      <Clock />
+
       {selected && favorites.length > 0 && (
-        <div className="sticky top-3 z-30 mt-5 px-4 sm:px-8">
+        <div className="sticky top-3 z-30 mt-6 px-4 sm:px-8">
           <FavoritesBar apps={favorites} onOpenApp={recordVisit} />
         </div>
       )}
 
-      <main className="mx-auto max-w-6xl px-4 pb-16 pt-10 sm:px-10 sm:pt-12">
+      {selected && favorites.length > 0 && (
+        <div className="mx-auto mt-6 max-w-6xl px-4 sm:px-10" aria-hidden>
+          <div className="h-px bg-white/45 shadow-[0_1px_0_rgb(0_0_0/0.08)]" />
+        </div>
+      )}
+
+      <main className="mx-auto max-w-6xl px-4 pb-16 pt-8 sm:px-10 sm:pt-10">
         {loading ? (
           <Centered>
             <Spinner />
@@ -167,9 +174,9 @@ function Clock() {
     return () => clearInterval(t);
   }, []);
   return (
-    <div className="hidden text-center leading-tight sm:block [text-shadow:0_1px_3px_rgb(0_0_0/0.35)]">
-      <div className="text-lg font-semibold">{now.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</div>
-      <div className="text-xs text-white/80">{now.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' })}</div>
+    <div className="mt-4 text-center leading-tight [text-shadow:0_1px_3px_rgb(0_0_0/0.35)] sm:mt-2">
+      <div className="text-5xl font-semibold tracking-tight sm:text-6xl">{now.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</div>
+      <div className="mt-1 text-base text-white/85 sm:text-lg">{now.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' })}</div>
     </div>
   );
 }

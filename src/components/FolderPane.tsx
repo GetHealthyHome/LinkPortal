@@ -34,7 +34,7 @@ export function FolderPane({
       aria-label={folder.name}
       className="w-full rounded-[28px] bg-white/20 px-2 pb-3 pt-2.5 shadow-[0_8px_32px_rgb(0_0_0/0.22)] ring-1 ring-inset ring-white/35 backdrop-blur-2xl backdrop-saturate-150 sm:px-3"
     >
-      <h2 className="mb-2 truncate px-2 text-sm font-semibold text-white [text-shadow:0_1px_3px_rgb(0_0_0/0.45)]">{folder.name}</h2>
+      <h2 className="mb-2 truncate px-2 text-lg font-semibold text-white [text-shadow:0_1px_3px_rgb(0_0_0/0.45)]">{folder.name}</h2>
       <div className={`grid ${PANE_GRID[columns]} gap-y-3`}>
         {folderApps.map((app) =>
           interactive ? (

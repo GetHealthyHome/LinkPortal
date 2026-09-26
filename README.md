@@ -4,8 +4,9 @@ An internal "home screen" for the company's websites and apps. Pick your name
 in the top-left corner and you see your own iPad-style grid of app icons.
 
 - **Portal** (`/`): choose your name from the drop-down to see your apps. Tap a folder to open it.
-  A frosted-glass **favorites bar** stays at the top with your 5 most-opened apps
-  (pinned apps first).
+  A frosted-glass **Most Visited** bar stays at the top with your 5 most-opened
+  apps (pinned apps first), separated from the rest by a line. Each person can
+  turn it off on the gear page.
 - **Gear icon** (`/settings/:person`): enter your 4-digit PIN, then
   - drag icons to rearrange them,
   - drop one app onto another to make a folder (or onto a folder to add it),
@@ -13,8 +14,8 @@ in the top-left corner and you see your own iPad-style grid of app icons.
   - choose **Show as stack** (a small folder you tap to open) or **Show as pane**
     (a frosted-glass window on the home screen showing the apps directly; it gets
     wider as more apps are added),
-  - pin up to 5 apps to the favorites bar and set their order (the rest of the
-    bar fills in with the apps you open most),
+  - turn the Most Visited bar on or off, pin up to 5 apps to it and set their
+    order (the rest of the bar fills in with the apps you open most),
   - tick or untick apps under **Choose your apps**,
   - **Reset to company layout** to go back to the admin's master folders,
   - change your PIN.
