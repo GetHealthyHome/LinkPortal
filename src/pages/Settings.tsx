@@ -108,9 +108,9 @@ export function Settings() {
     setPinBusy(true);
     setPinError(null);
     try {
-      const token = await api.unlockPerson(personId, pin);
-      session.setPersonToken(personId, token);
-      setAuth({ state: 'unlocked', token, asAdmin: false });
+      const signIn = await api.unlockPerson(personId, pin);
+      session.savePersonSignIn(personId, signIn);
+      setAuth({ state: 'unlocked', token: signIn.token, asAdmin: false });
     } catch (e) {
       if (e instanceof NeedsPinError) setCreateStep('create');
       else setPinError((e as Error).message);
@@ -135,9 +135,9 @@ export function Settings() {
     setPinBusy(true);
     setPinError(null);
     try {
-      const token = await api.createFirstPin(personId, pin);
-      session.setPersonToken(personId, token);
-      setAuth({ state: 'unlocked', token, asAdmin: false });
+      const signIn = await api.createFirstPin(personId, pin);
+      session.savePersonSignIn(personId, signIn);
+      setAuth({ state: 'unlocked', token: signIn.token, asAdmin: false });
     } catch (e) {
       // Someone else set it in the meantime: fall back to entering the PIN.
       setCreateStep('no');
@@ -149,9 +149,18 @@ export function Settings() {
 
   async function done() {
     if (!(await flush())) return;
-    if (auth.state === 'unlocked' && !auth.asAdmin) {
-      void api.endSession(auth.token).catch(() => {});
+    // Lock this person's screen again (their PIN session may exist even when
+    // editing as admin, e.g. after an admin signed in with their PIN).
+    const personToken = session.getPersonToken(personId);
+    if (personToken) {
+      void api.endSession(personToken).catch(() => {});
       session.setPersonToken(personId, null);
+    }
+    // Admin access that came from a PIN ends with the visit.
+    if (session.adminFromPin()) {
+      session.signOutAll(api.endSession);
+      navigate('/');
+      return;
     }
     navigate(auth.state === 'unlocked' && auth.asAdmin ? '/admin' : '/');
   }
@@ -246,9 +255,20 @@ export function Settings() {
             {saveState === 'saving' ? 'Saving…' : saveState === 'saved' ? 'All changes saved' : saveState === 'error' ? `Not saved: ${saveError}` : 'Drag to arrange · drop an app on another to make a folder'}
           </p>
         </div>
-        <button type="button" onClick={done} className="rounded-full bg-white px-5 py-2 text-sm font-semibold text-indigo-800 shadow hover:bg-white/90">
-          Done
-        </button>
+        <div className="flex items-center gap-2">
+          {person.is_admin && session.getAdminToken() && (
+            <button
+              type="button"
+              onClick={async () => (await flush()) && navigate('/admin')}
+              className="rounded-full bg-white/20 px-4 py-2 text-sm font-semibold text-white ring-1 ring-white/40 hover:bg-white/30"
+            >
+              Admin tools
+            </button>
+          )}
+          <button type="button" onClick={done} className="rounded-full bg-white px-5 py-2 text-sm font-semibold text-indigo-800 shadow hover:bg-white/90">
+            Done
+          </button>
+        </div>
       </header>
 
       <main className="mx-auto max-w-6xl px-4 pb-16 pt-8 sm:px-10">

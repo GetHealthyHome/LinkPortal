@@ -3,6 +3,8 @@ export interface Person {
   name: string;
   /** False until the person (or admin) has set a PIN. */
   has_pin: boolean;
+  /** Admins' own PIN also unlocks the admin tools. */
+  is_admin: boolean;
 }
 
 export interface App {

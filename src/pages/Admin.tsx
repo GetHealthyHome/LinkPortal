@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { AppIconImage } from '../components/AppIcon';
 import { Spinner } from '../components/Wallpaper';
 import { api } from '../lib/api';
 import { resizeIcon } from '../lib/icons';
 import { session } from '../lib/session';
-import type { App, MasterFolder } from '../lib/types';
+import type { App, MasterFolder, Person } from '../lib/types';
 import { usePortalData } from '../lib/usePortalData';
 
 type Tab = 'people' | 'apps' | 'folders' | 'account';
@@ -25,7 +25,8 @@ export function Admin() {
   }, []);
 
   function signOut() {
-    if (token) void api.endSession(token).catch(() => {});
+    if (session.adminFromPin()) session.signOutAll(api.endSession);
+    else if (token) void api.endSession(token).catch(() => {});
     session.setAdminToken(null);
     setToken(null);
   }
@@ -70,18 +71,41 @@ export function Admin() {
 }
 
 function Login({ onLogin }: { onLogin: (token: string) => void }) {
+  const [params] = useSearchParams();
+  const [admins, setAdmins] = useState<Person[]>([]);
+  const [mode, setMode] = useState<'password' | 'pin'>(params.get('person') ? 'pin' : 'password');
+  const [personId, setPersonId] = useState(params.get('person') ?? '');
   const [password, setPassword] = useState('');
+  const [pin, setPin] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    api
+      .listPeople()
+      .then((people) => setAdmins(people.filter((p) => p.is_admin && p.has_pin !== false)))
+      .catch(() => {});
+  }, []);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
     setError(null);
     try {
-      onLogin(await api.adminLogin(password));
+      if (!(mode === 'pin' && admins.length > 0)) {
+        onLogin(await api.adminLogin(password));
+      } else {
+        const signIn = await api.unlockPerson(personId, pin);
+        if (!signIn.adminToken) {
+          void api.endSession(signIn.token).catch(() => {});
+          throw new Error('That person isn’t an admin.');
+        }
+        session.savePersonSignIn(personId, signIn);
+        onLogin(signIn.adminToken);
+      }
     } catch (err) {
       setError((err as Error).message);
+      setPin('');
     } finally {
       setBusy(false);
     }
@@ -90,12 +114,67 @@ function Login({ onLogin }: { onLogin: (token: string) => void }) {
   return (
     <form onSubmit={submit} className="card mx-auto mt-20 max-w-sm">
       <h1 className="text-xl font-semibold">Admin sign-in</h1>
-      <label className="mt-4 block text-sm font-medium">
-        Admin password
-        <input type="password" autoFocus value={password} onChange={(e) => setPassword(e.target.value)} className="input mt-1" autoComplete="current-password" />
-      </label>
+
+      {admins.length > 0 && (
+        <div className="mt-4 grid grid-cols-2 gap-1 rounded-xl bg-neutral-100 p-1 text-sm font-medium" role="tablist">
+          {(['pin', 'password'] as const).map((m) => (
+            <button
+              key={m}
+              type="button"
+              role="tab"
+              aria-selected={mode === m}
+              onClick={() => {
+                setMode(m);
+                setError(null);
+              }}
+              className={`rounded-lg py-1.5 ${mode === m ? 'bg-white shadow-sm' : 'text-neutral-600'}`}
+            >
+              {m === 'pin' ? 'My name & PIN' : 'Admin password'}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {mode === 'pin' && admins.length > 0 ? (
+        <>
+          <label className="mt-4 block text-sm font-medium">
+            Your name
+            <select className="input mt-1" value={personId} onChange={(e) => setPersonId(e.target.value)}>
+              <option value="">Choose…</option>
+              {admins.map((a) => (
+                <option key={a.id} value={a.id}>
+                  {a.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="mt-3 block text-sm font-medium">
+            Your 4-digit PIN
+            <input
+              type="password"
+              inputMode="numeric"
+              maxLength={4}
+              autoFocus
+              value={pin}
+              onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
+              className="input mt-1 tracking-[0.5em]"
+              autoComplete="off"
+            />
+          </label>
+        </>
+      ) : (
+        <label className="mt-4 block text-sm font-medium">
+          Admin password
+          <input type="password" autoFocus value={password} onChange={(e) => setPassword(e.target.value)} className="input mt-1" autoComplete="current-password" />
+        </label>
+      )}
+
       {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
-      <button type="submit" disabled={busy || !password} className="btn-primary mt-4 w-full">
+      <button
+        type="submit"
+        disabled={busy || (mode === 'pin' && admins.length > 0 ? !personId || pin.length !== 4 : !password)}
+        className="btn-primary mt-4 w-full"
+      >
         {busy ? 'Signing in…' : 'Sign in'}
       </button>
     </form>
@@ -231,6 +310,9 @@ function PeopleTab({ token, data, run }: { token: string; data: Data; run: Run }
                 {p.has_pin === false && (
                   <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">No PIN yet</span>
                 )}
+                {p.is_admin && (
+                  <span className="ml-2 rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-medium text-indigo-800">Admin</span>
+                )}
               </span>
               <Link to={`/settings/${p.id}`} className="btn-small">
                 Edit apps
@@ -244,6 +326,18 @@ function PeopleTab({ token, data, run }: { token: string; data: Data; run: Run }
                 }}
               >
                 Rename
+              </button>
+              <button
+                type="button"
+                className="btn-small"
+                onClick={() => {
+                  const message = p.is_admin
+                    ? `Remove admin from ${p.name}? Their PIN will only open their own home screen.`
+                    : `Make ${p.name} an admin? Their 4-digit PIN will also unlock these admin tools.`;
+                  if (confirm(message)) void run(() => api.setAdmin(token, p.id, !p.is_admin));
+                }}
+              >
+                {p.is_admin ? 'Remove admin' : 'Make admin'}
               </button>
               <button
                 type="button"
