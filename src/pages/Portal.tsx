@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Board } from '../components/Board';
+import { FavoritesBar } from '../components/FavoritesBar';
 import { GearIcon, Spinner, Wallpaper } from '../components/Wallpaper';
 import { api } from '../lib/api';
 import { session } from '../lib/session';
-import type { Layout } from '../lib/types';
+import type { App, Layout } from '../lib/types';
 import { usePortalData } from '../lib/usePortalData';
 
 export function Portal() {
@@ -12,6 +13,7 @@ export function Portal() {
   const [personId, setPersonId] = useState<string | null>(() => session.getSelectedPerson());
   const [layout, setLayout] = useState<Layout | null>(null);
   const [boardError, setBoardError] = useState<string | null>(null);
+  const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
   const navigate = useNavigate();
 
   // Forget a remembered person who has since been removed.
@@ -30,14 +32,26 @@ export function Portal() {
     }
     let cancelled = false;
     setLayout(null);
+    setFavoriteIds([]);
     api
       .getBoard(selected.id)
       .then((l) => !cancelled && (setLayout(l), setBoardError(null)))
       .catch((e: Error) => !cancelled && setBoardError(e.message));
+    // The favorites bar is a nice-to-have: if it fails, just don't show it.
+    api
+      .getFavorites(selected.id)
+      .then((f) => !cancelled && setFavoriteIds(f.bar))
+      .catch(() => {});
     return () => {
       cancelled = true;
     };
   }, [selected]);
+
+  const favorites = favoriteIds.map((id) => apps.get(id)).filter((a): a is App => Boolean(a));
+
+  function recordVisit(appId: string) {
+    if (selected) void api.recordVisit(selected.id, appId).catch(() => {});
+  }
 
   function choose(id: string) {
     setPersonId(id || null);
@@ -79,7 +93,13 @@ export function Portal() {
         </button>
       </header>
 
-      <main className="mx-auto max-w-6xl px-4 pb-16 pt-10 sm:px-10 sm:pt-14">
+      {selected && favorites.length > 0 && (
+        <div className="sticky top-3 z-30 mt-5 px-4 sm:px-8">
+          <FavoritesBar apps={favorites} onOpenApp={recordVisit} />
+        </div>
+      )}
+
+      <main className="mx-auto max-w-6xl px-4 pb-16 pt-10 sm:px-10 sm:pt-12">
         {loading ? (
           <Centered>
             <Spinner />
@@ -116,7 +136,7 @@ export function Portal() {
             </Link>
           </Centered>
         ) : (
-          <Board layout={layout} apps={apps} masterFolders={masterFolders} />
+          <Board layout={layout} apps={apps} masterFolders={masterFolders} onOpenApp={recordVisit} />
         )}
       </main>
     </Wallpaper>

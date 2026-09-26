@@ -2,6 +2,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { AppIconImage } from '../components/AppIcon';
 import { Board } from '../components/Board';
+import { FavoritesBar } from '../components/FavoritesBar';
+import { FavoritesEditor, useFavorites } from '../components/FavoritesEditor';
 import { PinPad } from '../components/PinPad';
 import { Spinner, Wallpaper } from '../components/Wallpaper';
 import { api, NeedsPinError } from '../lib/api';
@@ -65,6 +67,8 @@ export function Settings() {
     [personId],
   );
 
+  const favorites = useFavorites(personId, auth.state === 'unlocked' ? auth.token : null, lock);
+
   const flush = useCallback(async () => {
     if (timer.current) clearTimeout(timer.current);
     timer.current = null;
@@ -75,6 +79,7 @@ export function Settings() {
       await api.saveBoard(auth.token, personId, next);
       if (pending.current === next) pending.current = null;
       setSaveState('saved');
+      void favorites.refresh();
       setSaveError(null);
       return true;
     } catch (e) {
@@ -84,7 +89,7 @@ export function Settings() {
       if (/PIN|sign-in/i.test(message) && !auth.asAdmin) lock('Your session timed out. Enter your PIN to keep going.');
       return false;
     }
-  }, [auth, personId, lock]);
+  }, [auth, personId, lock, favorites.refresh]);
 
   function update(next: Layout) {
     setLayout(next);
@@ -219,6 +224,8 @@ export function Settings() {
   }
 
   const chosen = new Set(layout ? appIdsIn(layout) : []);
+  const boardApps = [...chosen].map((id) => apps.get(id)).filter((a): a is App => Boolean(a));
+  const barApps = favorites.bar.filter((id) => chosen.has(id)).map((id) => apps.get(id)!).filter(Boolean);
   const groups = [
     ...masterFolders.map((f) => ({ id: f.id, name: f.name, apps: appList.filter((a) => a.master_folder_id === f.id) })),
     { id: 'none', name: masterFolders.length ? 'Other apps' : 'All apps', apps: appList.filter((a) => !a.master_folder_id || !masterFolders.some((f) => f.id === a.master_folder_id)) },
@@ -245,6 +252,11 @@ export function Settings() {
       </header>
 
       <main className="mx-auto max-w-6xl px-4 pb-16 pt-8 sm:px-10">
+        {barApps.length > 0 && (
+          <div className="mb-10">
+            <FavoritesBar apps={barApps} pinned={new Set(favorites.pinned ?? [])} />
+          </div>
+        )}
         <section aria-label="Arrange your apps" className="min-h-40">
           {layout === null ? (
             <div className="flex justify-center py-10">
@@ -256,6 +268,8 @@ export function Settings() {
             <Board layout={layout} apps={apps} masterFolders={masterFolders} editing onChange={update} />
           )}
         </section>
+
+        <FavoritesEditor boardApps={boardApps} pinned={favorites.pinned} error={favorites.error} onSave={favorites.save} />
 
         <section className="mt-12 rounded-3xl bg-white p-5 text-neutral-900 shadow-2xl sm:p-7">
           <div className="flex flex-wrap items-center justify-between gap-3">
