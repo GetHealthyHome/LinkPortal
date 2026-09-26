@@ -180,7 +180,7 @@ function PeopleTab({ token, data, run }: { token: string; data: Data; run: Run }
 
   async function add(e: React.FormEvent) {
     e.preventDefault();
-    if (!/^\d{4}$/.test(pin)) return alert('The PIN must be exactly 4 digits.');
+    if (pin && !/^\d{4}$/.test(pin)) return alert('The PIN must be exactly 4 digits, or left blank.');
     if (await run(() => api.createPerson(token, name.trim(), pin, [...selectedApps]))) {
       setName('');
       setPin('');
@@ -197,24 +197,25 @@ function PeopleTab({ token, data, run }: { token: string; data: Data; run: Run }
           <input className="input mt-1" value={name} onChange={(e) => setName(e.target.value)} maxLength={60} required />
         </label>
         <label className="mt-3 block text-sm font-medium">
-          4-digit PIN
+          4-digit PIN <span className="font-normal text-neutral-500">(optional)</span>
           <input
             className="input mt-1 tracking-[0.4em]"
             inputMode="numeric"
             maxLength={4}
             value={pin}
             onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
-            required
             autoComplete="off"
           />
-          <span className="mt-1 block text-xs font-normal text-neutral-500">Give this to the person. They can change it later.</span>
+          <span className="mt-1 block text-xs font-normal text-neutral-500">
+            Leave blank and they’ll create their own PIN the first time they tap the gear.
+          </span>
         </label>
         <fieldset className="mt-4">
           <legend className="text-sm font-medium">Starting apps</legend>
           <p className="text-xs text-neutral-500">They’ll be grouped using your master folders.</p>
           <AppChecklist apps={data.appList} folders={data.masterFolders} selected={selectedApps} onChange={setSelectedApps} />
         </fieldset>
-        <button type="submit" className="btn-primary mt-4 w-full" disabled={!name.trim() || pin.length !== 4}>
+        <button type="submit" className="btn-primary mt-4 w-full" disabled={!name.trim() || (pin.length > 0 && pin.length !== 4)}>
           Add person
         </button>
       </form>
@@ -225,7 +226,12 @@ function PeopleTab({ token, data, run }: { token: string; data: Data; run: Run }
         <ul className="mt-2 divide-y divide-neutral-100">
           {data.people.map((p) => (
             <li key={p.id} className="flex flex-wrap items-center gap-2 py-3">
-              <span className="min-w-0 flex-1 truncate font-medium">{p.name}</span>
+              <span className="min-w-0 flex-1 truncate font-medium">
+                {p.name}
+                {p.has_pin === false && (
+                  <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">No PIN yet</span>
+                )}
+              </span>
               <Link to={`/settings/${p.id}`} className="btn-small">
                 Edit apps
               </Link>
@@ -243,8 +249,17 @@ function PeopleTab({ token, data, run }: { token: string; data: Data; run: Run }
                 type="button"
                 className="btn-small"
                 onClick={() => {
-                  const next = prompt(`New 4-digit PIN for ${p.name}:`)?.trim();
-                  if (next === undefined || next === '') return;
+                  const answer = prompt(
+                    `New 4-digit PIN for ${p.name}.\n\nOr leave this blank and click OK to clear it, so ${p.name} creates a new PIN next time.`,
+                  );
+                  if (answer === null) return;
+                  const next = answer.trim();
+                  if (next === '') {
+                    void run(() => api.clearPin(token, p.id)).then(
+                      (ok) => ok && alert(`${p.name}’s PIN was cleared. They’ll create a new one next time they tap the gear.`),
+                    );
+                    return;
+                  }
                   if (!/^\d{4}$/.test(next)) return alert('The PIN must be exactly 4 digits.');
                   void run(() => api.changePin(token, p.id, next)).then((ok) => ok && alert(`${p.name}’s PIN was changed.`));
                 }}
