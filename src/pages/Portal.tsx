@@ -40,7 +40,7 @@ export function Portal() {
     // The favorites bar is a nice-to-have: if it fails, just don't show it.
     api
       .getFavorites(selected.id)
-      .then((f) => !cancelled && setFavoriteIds(f.bar))
+      .then((f) => !cancelled && setFavoriteIds(f.show === false ? [] : f.bar))
       .catch(() => {});
     return () => {
       cancelled = true;
@@ -112,7 +112,13 @@ export function Portal() {
         </div>
       )}
 
-      <main className="mx-auto max-w-6xl px-4 pb-16 pt-10 sm:px-10 sm:pt-12">
+      {selected && favorites.length > 0 && (
+        <div className="mx-auto mt-6 max-w-6xl px-4 sm:px-10" aria-hidden>
+          <div className="h-px bg-white/45 shadow-[0_1px_0_rgb(0_0_0/0.08)]" />
+        </div>
+      )}
+
+      <main className="mx-auto max-w-6xl px-4 pb-16 pt-8 sm:px-10 sm:pt-10">
         {loading ? (
           <Centered>
             <Spinner />

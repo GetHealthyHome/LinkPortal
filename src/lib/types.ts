@@ -40,6 +40,8 @@ export type BoardItem = AppItem | FolderItem;
 export type Layout = BoardItem[];
 
 export interface Favorites {
+  /** False when the person has turned the Most Visited bar off. */
+  show?: boolean;
   /** Apps the person pinned, in order. */
   pinned: string[];
   /** Up to 5 apps to show: pinned first, then the most opened. */

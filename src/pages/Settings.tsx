@@ -272,9 +272,10 @@ export function Settings() {
       </header>
 
       <main className="mx-auto max-w-6xl px-4 pb-16 pt-8 sm:px-10">
-        {barApps.length > 0 && (
-          <div className="mb-10">
+        {favorites.show && barApps.length > 0 && (
+          <div className="mb-8">
             <FavoritesBar apps={barApps} pinned={new Set(favorites.pinned ?? [])} />
+            <div className="mt-6 h-px bg-white/45 shadow-[0_1px_0_rgb(0_0_0/0.08)]" aria-hidden />
           </div>
         )}
         <section aria-label="Arrange your apps" className="min-h-40">
@@ -289,7 +290,14 @@ export function Settings() {
           )}
         </section>
 
-        <FavoritesEditor boardApps={boardApps} pinned={favorites.pinned} error={favorites.error} onSave={favorites.save} />
+        <FavoritesEditor
+          boardApps={boardApps}
+          pinned={favorites.pinned}
+          show={favorites.show}
+          error={favorites.error}
+          onSave={favorites.save}
+          onShowChange={favorites.saveShow}
+        />
 
         <section className="mt-12 rounded-3xl bg-white p-5 text-neutral-900 shadow-2xl sm:p-7">
           <div className="flex flex-wrap items-center justify-between gap-3">

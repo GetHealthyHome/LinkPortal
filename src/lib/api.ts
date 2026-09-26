@@ -56,6 +56,8 @@ export const api = {
     rpc<void>('record_visit', { p_person_id: personId, p_app_id: appId }),
   savePins: (token: string, personId: string, appIds: string[]) =>
     rpc<void>('save_pins', { p_token: token, p_person_id: personId, p_app_ids: appIds }),
+  setShowFavorites: (token: string, personId: string, show: boolean) =>
+    rpc<void>('set_show_favorites', { p_token: token, p_person_id: personId, p_show: show }),
   defaultLayout: (appIds: string[]) => rpc<Layout>('default_layout', { p_app_ids: appIds }),
 
   unlockPerson: (personId: string, pin: string) =>
